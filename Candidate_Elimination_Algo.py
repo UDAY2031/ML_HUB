@@ -23,8 +23,15 @@ def ce(data):
     
     return s, g
 
-# Read data from CSV
-data = pd.read_csv('enjoysport.csv')
+data = pd.DataFrame({
+    'O':['Sunny','Sunny','Rainy','Sunny'],
+    'T':['Warm','Warm','Cool','Warm'],
+    'H':['Normal','High','High','High'],
+    'W':['Strong','Strong','Strong','Strong'],
+    'A':['Warm','Warm','Warm','Cool'],
+    'F':['Same','Same','Change','Change'],
+    'P':["Yes",'Yes','No','Yes']
+})
 
 # Run the algorithm
 s, g = ce(data)
