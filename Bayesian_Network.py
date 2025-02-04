@@ -19,7 +19,7 @@ model.add_cpds(*[mle.estimate_cpd(n) for n in model.nodes()])
 if model.check_model():
     print("Model OK")
     infer = VariableElimination(model)
-    print(infer.query(['t'], evidence={'x': 'o', 's': 'M', 'c': '3', 'y': 'h', 'z': 'h'}))
+    print(infer.query(['t']))
 
     correct = 0
     for _, r in df.iterrows():
