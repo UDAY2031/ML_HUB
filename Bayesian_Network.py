@@ -3,46 +3,29 @@ from pgmpy.models import BayesianNetwork
 from pgmpy.estimators import MaximumLikelihoodEstimator
 from pgmpy.inference import VariableElimination
 
-# Load and preprocess data
 df = pd.read_csv('heart.csv')
-df['a'] = pd.qcut(df['age'], 3, labels=['young', 'middle', 'elderly'])
-df['b'] = pd.qcut(df['trestbps'], 3, labels=['low', 'normal', 'high'])
-df['c'] = pd.qcut(df['chol'], 3, labels=['low', 'normal', 'high'])
-df = df[['a', 'sex', 'cp', 'b', 'c', 'target']]
-df['sex'] = df['sex'].map({0: 'F', 1: 'M'})
-df['cp'] = df['cp'].astype(str)
-df['target'] = df['target'].astype(str)
+df['x'] = pd.qcut(df['age'], 3, labels=['y', 'm', 'o'])
+df['y'] = pd.qcut(df['trestbps'], 3, labels=['l', 'n', 'h'])
+df['z'] = pd.qcut(df['chol'], 3, labels=['l', 'n', 'h'])
+df['s'] = df['sex'].map({0: 'F', 1: 'M'})
+df['c'] = df['cp'].astype(str)
+df['t'] = df['target'].astype(str)
+df = df[['x', 's', 'c', 'y', 'z', 't']]
 
-# Create Bayesian Network
-model = BayesianNetwork([('a', 'c'), ('a', 'b'), ('sex', 'c'),
-                         ('sex', 'cp'), ('c', 'target'), ('b', 'target'),
-                         ('cp', 'target')])
-
-# Train model
+model = BayesianNetwork([('x', 'z'), ('x', 'y'), ('s', 'z'), ('s', 'c'), ('z', 't'), ('y', 't'), ('c', 't')])
 mle = MaximumLikelihoodEstimator(model, df)
-cpds = [mle.estimate_cpd(node) for node in model.nodes()]
-model.add_cpds(*cpds)
+model.add_cpds(*[mle.estimate_cpd(n) for n in model.nodes()])
 
 if model.check_model():
-    print("Bayesian Network successfully created and validated")
-
-    # Make inference for a sample
-    evidence = {'a': 'elderly', 'sex': 'M', 'cp': '3', 'b': 'high', 'c': 'high'}
+    print("Model OK")
     infer = VariableElimination(model)
-    result = infer.query(variables=['target'], evidence=evidence)
-    print("\nProbability Distribution for Heart Disease given evidence:")
-    print(result)
+    print(infer.query(['t'], evidence={'x': 'o', 's': 'M', 'c': '3', 'y': 'h', 'z': 'h'}))
 
-    # Model accuracy
-    correct, total = 0, len(df)
-    for _, row in df.iterrows():
-        evidence = {'a': row['a'], 'sex': row['sex'], 'cp': row['cp'],
-                    'b': row['b'], 'c': row['c']}
-        result = infer.query(variables=['target'], evidence=evidence)
-        predicted_class = '1' if result.values[1] > 0.5 else '0'
-        correct += int(predicted_class == row['target'])
+    correct = 0
+    for _, r in df.iterrows():
+        pred = infer.query(['t'], evidence={'x': r['x'], 's': r['s'], 'c': r['c'], 'y': r['y'], 'z': r['z']})
+        correct += (pred.values[1] > 0.5) == (r['t'] == '1')
 
-    accuracy = correct / total
-    print(f"\nModel Accuracy: {accuracy:.2f}")
+    print(f"Accuracy: {correct / len(df):.2f}")
 else:
-    print("Error: Invalid Bayesian Network")
+    print("Error")
