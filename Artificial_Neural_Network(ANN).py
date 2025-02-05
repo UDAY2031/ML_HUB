@@ -44,8 +44,8 @@ for epoch in range(epochs + 1):
     # Update weights and biases
     w2 += h_output.T.dot(o_delta) * lr
     w1 += x.T.dot(h_delta) * lr
-    b2 += np.sum(o_delta, axis=0, keepdims=True) * lr
-    b1 += np.sum(h_delta, axis=0, keepdims=True) * lr
+    b2 += np.sum(o_delta) * lr
+    b1 += np.sum(h_delta) * lr
 
     # Print loss for specific epochs
     if epoch in print_epochs:
